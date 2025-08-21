@@ -1,20 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
+  <base href="/"> <!-- Quan trọng: Đặt base href về root -->
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
@@ -31,8 +18,33 @@
 
   <title>test</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Thêm preload cho GeoJSON để tải sớm -->
+  <link rel="preload" href="assets/test.geojson" as="fetch" crossorigin="anonymous">
+  
+  <!-- Thêm Firebase SDK nếu bạn dùng Firebase -->
+  <script src="https://unpkg.com/image-picker-web@latest/dist/image_picker_web.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  <script src="https://unpkg.com/image-picker-web@latest/dist/image_picker_web.min.js"></script>
+
 </head>
 <body>
+  <!-- Thêm script khởi tạo Firebase nếu cần -->
+  <script>
+    // Khởi tạo Firebase (nếu dùng)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAQO2BmNaZcast3fRMTUUo7FzvuupdTE0w",
+      authDomain: "compact-mystery-420806.firebaseapp.com",
+      projectId: "compact-mystery-420806",
+      storageBucket: "compact-mystery-420806.appspot.com",
+      messagingSenderId: "1072971256470",
+      appId: "1:1072971256470:web:1fd0e2d50054f48a9328b7",
+      measurementId: "G-5MDD2BR4PL"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

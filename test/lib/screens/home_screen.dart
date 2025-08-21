@@ -226,7 +226,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemBuilder: (context, index) {
                     var tree = _trees[index];
 
-                    // Kiểm tra và hiển thị thông tin cây an toàn
                     String treeType = tree['treeType'] ?? "Không xác định";
                     String status = tree['status'] ?? "Không rõ";
                     String imageUrl = tree['imageUrl'] ?? "";

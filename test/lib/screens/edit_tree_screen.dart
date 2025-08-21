@@ -13,9 +13,8 @@ class EditTreeScreen extends StatefulWidget {
   final String treeType;
   final String status;
   final String imageUrl;
-  final Map<String, dynamic> location; // Thêm trường location (lat, long)
-  final Map<String, dynamic>
-      address; // Thêm trường address (street, district, city, country)
+  final Map<String, dynamic> location;
+  final Map<String, dynamic> address;
 
   const EditTreeScreen({
     super.key,
@@ -76,9 +75,8 @@ class _EditTreeScreenState extends State<EditTreeScreen> {
     super.dispose();
   }
 
-  // Lấy vị trí GPS và địa chỉ chi tiết
   Future<void> _getCurrentLocation() async {
-    if (!mounted) return; // Kiểm tra nếu widget không còn mounted
+    if (!mounted) return;
 
     setState(() => isLoading = true);
 
@@ -115,16 +113,13 @@ class _EditTreeScreenState extends State<EditTreeScreen> {
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks.first;
 
-        // Lấy thông tin chi tiết từ Placemark
         _address = AddressModel.fromLocation(place);
 
-        // Kiểm tra và điều chỉnh giá trị district nếu cần
         if (_address!.district.isEmpty) {
           _address!.district =
               place.subAdministrativeArea ?? place.subLocality ?? "";
         }
 
-        // Cập nhật địa chỉ chi tiết
         if (mounted) {
           setState(() {
             _locationController.text = "Vĩ độ: $latitude, Kinh độ: $longitude";
@@ -133,7 +128,6 @@ class _EditTreeScreenState extends State<EditTreeScreen> {
           });
         }
 
-        // Cập nhật bản đồ
         mapController.changeLocation(
           osm.GeoPoint(latitude: latitude!, longitude: longitude!),
         );
@@ -149,7 +143,6 @@ class _EditTreeScreenState extends State<EditTreeScreen> {
     }
   }
 
-  // Chọn hoặc chụp ảnh
   Future<void> _pickImage(ImageSource source) async {
     try {
       final picker = ImagePicker();
@@ -165,7 +158,6 @@ class _EditTreeScreenState extends State<EditTreeScreen> {
     }
   }
 
-  // Upload ảnh lên Firebase Storage
   Future<String?> _uploadImage() async {
     if (_newImageFile == null) return null;
 
@@ -184,7 +176,6 @@ class _EditTreeScreenState extends State<EditTreeScreen> {
     }
   }
 
-  // Cập nhật dữ liệu cây vào Firestore
   Future<void> _updateTree() async {
     if (_treeTypeController.text.isEmpty ||
         latitude == null ||
@@ -193,7 +184,7 @@ class _EditTreeScreenState extends State<EditTreeScreen> {
       return;
     }
 
-    if (!mounted) return; // Kiểm tra nếu widget không còn mounted
+    if (!mounted) return;
 
     setState(() => isLoading = true);
 
@@ -229,7 +220,6 @@ class _EditTreeScreenState extends State<EditTreeScreen> {
     }
   }
 
-  // SnackBar thông báo
   void _showSnackBar(String message, Color color) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -371,7 +361,6 @@ class _EditTreeScreenState extends State<EditTreeScreen> {
     );
   }
 
-  // Xóa cây
   Future<void> _deleteTree() async {
     bool confirmDelete = await showDialog(
           context: context,
@@ -394,18 +383,16 @@ class _EditTreeScreenState extends State<EditTreeScreen> {
 
     if (!confirmDelete) return;
 
-    if (!mounted) return; // Kiểm tra nếu widget không còn mounted
+    if (!mounted) return;
 
     setState(() => isLoading = true);
 
     try {
-      // Xóa dữ liệu Firestore
       await FirebaseFirestore.instance
           .collection('trees')
           .doc(widget.treeId)
           .delete();
 
-      // Xóa ảnh trong Storage
       Reference photoRef = FirebaseStorage.instance.refFromURL(widget.imageUrl);
       await photoRef.delete();
 
@@ -421,7 +408,6 @@ class _EditTreeScreenState extends State<EditTreeScreen> {
   }
 }
 
-// Model lưu thông tin địa chỉ
 class AddressModel {
   String name;
   String street;

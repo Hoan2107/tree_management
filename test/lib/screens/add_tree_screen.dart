@@ -7,7 +7,6 @@
   import 'package:flutter_osm_plugin/flutter_osm_plugin.dart' as osm;
   import 'dart:io';
 
-  // Model lưu thông tin địa chỉ
   class AddressModel {
     String name;
     String street;
@@ -75,7 +74,6 @@
       );
     }
 
-    // Lấy vị trí GPS và địa chỉ chi tiết
     Future<void> _getCurrentLocation() async {
       setState(() => isLoading = true);
 
@@ -112,23 +110,19 @@
         if (placemarks.isNotEmpty) {
           Placemark place = placemarks.first;
 
-          // Lấy thông tin chi tiết từ Placemark
           _address = AddressModel.fromLocation(place);
 
-          // Kiểm tra và điều chỉnh giá trị district nếu cần
           if (_address!.district.isEmpty) {
             _address!.district =
                 place.subAdministrativeArea ?? place.subLocality ?? "";
           }
 
-          // Cập nhật địa chỉ chi tiết
           setState(() {
             _locationController.text = "Vĩ độ: $latitude, Kinh độ: $longitude";
             _addressController.text =
                 "${_address!.street}, ${_address!.district}, ${_address!.city}, ${_address!.country}";
           });
 
-          // Cập nhật bản đồ
           mapController.changeLocation(
             osm.GeoPoint(latitude: latitude!, longitude: longitude!),
           );
@@ -142,7 +136,6 @@
       }
     }
 
-    // Chọn hoặc chụp ảnh
     Future<void> _pickImage(ImageSource source) async {
       try {
         final picker = ImagePicker();
@@ -158,7 +151,6 @@
       }
     }
 
-    // Upload ảnh lên Firebase Storage
     Future<String?> _uploadImage() async {
       if (_imageFile == null) return null;
 
@@ -177,7 +169,6 @@
       }
     }
 
-    // Lưu dữ liệu cây vào Firestore
     Future<void> _addTree() async {
       if (_treeTypeController.text.isEmpty ||
           latitude == null ||
@@ -216,7 +207,6 @@
       }
     }
 
-    // SnackBar thông báo
     void _showSnackBar(String message, Color color) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
