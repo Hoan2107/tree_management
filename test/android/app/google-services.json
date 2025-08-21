@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1072971256470",
+    "project_id": "compact-mystery-420806",
+    "storage_bucket": "compact-mystery-420806.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1072971256470:android:00ab654923080c979328b7",
+        "android_client_info": {
+          "package_name": "com.example.flutter_firebase_crud_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAVboQDzl_XQ_DEVDITaWqq61OVlHJgXc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

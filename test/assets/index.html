@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Firebase & GeoJSON</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map { width: 100%; height: 90vh; }
+        #info { padding: 10px; background: white; }
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        #controls button {
+            display: block;
+            margin: 5px 0;
+            padding: 5px 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #controls button.active {
+            background: #28a745;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+    <div id="info">Đang tải dữ liệu...</div>
+    <div id="controls">
+        <button id="toggleOSM">Bật/Tắt OSM</button>
+        <button id="toggleGeoJSON">Bật/Tắt Bản đồ</button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js';
+        import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js';
+
+        // Cấu hình Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAQO2BmNaZcast3fRMTUUo7FzvuupdTE0w",
+            authDomain: "compact-mystery-420806.firebaseapp.com",
+            projectId: "compact-mystery-420806",
+            storageBucket: "compact-mystery-420806.appspot.com",
+            messagingSenderId: "1072971256470",
+            appId: "1:1072971256470:web:1fd0e2d50054f48a9328b7",
+            measurementId: "G-5MDD2BR4PL"
+        };
+
+        // Khởi tạo Firebase
+        const firebaseApp = initializeApp(firebaseConfig);
+        const db = getFirestore(firebaseApp);
+        const treesRef = collection(db, 'trees');
+
+        // Tạo bản đồ Leaflet
+        const map = L.map('map').setView([21.0285, 105.8542], 10);
+
+        // Tạo lớp OSM
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        });
+
+        // Tạo lớp GeoJSON
+        let geojsonLayer = null;
+
+        // Thêm lớp OSM mặc định
+        osmLayer.addTo(map);
+
+        let bounds = L.latLngBounds();
+
+        // Tải dữ liệu từ Firestore và hiển thị marker cây xanh
+        async function loadTreeData() {
+            try {
+                const querySnapshot = await getDocs(treesRef);
+                if (querySnapshot.empty) {
+                    document.getElementById('info').innerHTML = "❌ Không có dữ liệu Firestore!";
+                    return;
+                }
+
+                let content = "<b>Dữ liệu cây xanh:</b><br>";
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.location && typeof data.location.lat === 'number' && typeof data.location.long === 'number') {
+                        const { lat, long } = data.location;
+
+                        // Thêm marker vào bản đồ
+                        const marker = L.marker([lat, long]).addTo(map)
+                            .bindPopup(`
+                                <b>${data.treeType || 'Không rõ'}</b><br>
+                                📍 <b>Vị trí:</b> ${lat}, ${long}<br>
+                                🕒 <b>Thời gian:</b> ${data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : 'Không có thông tin'}<br>
+                                ${data.imageUrl ? `<img src="${data.imageUrl}" alt="Tree Image" style="width: 100px; height: 100px; object-fit: cover;">` : ''}
+                            `);
+                        bounds.extend([lat, long]);
+
+                        content += `🌳 Loại cây: ${data.treeType || 'Không rõ'}, 📍 ${lat}, ${long} <br>`;
+                    }
+                });
+
+                // Hiển thị thông tin danh sách cây
+                document.getElementById('info').innerHTML = content;
+            } catch (error) {
+                document.getElementById('info').innerHTML = `🔥 Lỗi Firestore: ${error.message}`;
+                console.error("Lỗi Firestore:", error);
+            }
+        }
+
+        // Hàm để hiển thị GeoJSON trên bản đồ
+        function loadGeoJSON(geojsonData) {
+            try {
+                if (geojsonLayer) {
+                    map.removeLayer(geojsonLayer); // Xóa lớp GeoJSON cũ nếu có
+                }
+                geojsonLayer = L.geoJSON(geojsonData, {
+                    style: {
+                        color: "#ff7800", // Màu cam
+                        weight: 2,
+                        opacity: 0.7,
+                        fillColor: "#ff7800", // Màu cam
+                        fillOpacity: 0.3
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties && feature.properties.name) {
+                            // Hiển thị thông tin khi click vào vùng
+                            layer.bindPopup(`
+                                <b>Khu vực:</b> ${feature.properties.name}<br>
+                                <b>Diện tích:</b> ${feature.properties.area_km2.toFixed(2)} km²
+                            `);
+                        }
+                        layer.on('mouseover', function () {
+                            this.setStyle({ fillOpacity: 0.6 });
+                        });
+                        layer.on('mouseout', function () {
+                            this.setStyle({ fillOpacity: 0.3 });
+                        });
+
+                        // Mở rộng phạm vi hiển thị bản đồ để bao gồm cả vùng
+                        if (layer.getBounds) {
+                            bounds.extend(layer.getBounds());
+                        }
+                    }
+                });
+                if (document.getElementById('toggleGeoJSON').classList.contains('active')) {
+                    geojsonLayer.addTo(map); // Thêm lớp GeoJSON nếu đang bật
+                }
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải GeoJSON:", error);
+            }
+        }
+
+        // Gọi hàm để tải dữ liệu
+        loadTreeData();
+        window.receiveGeoJSON = function(geojsonData) {
+            loadGeoJSON(geojsonData);
+        };
+
+        // Điều khiển tắt/bật lớp OSM
+        document.getElementById('toggleOSM').addEventListener('click', function () {
+            if (map.hasLayer(osmLayer)) {
+                map.removeLayer(osmLayer);
+                this.classList.remove('active');
+            } else {
+                osmLayer.addTo(map);
+                this.classList.add('active');
+            }
+        });
+
+        // Điều khiển tắt/bật lớp GeoJSON
+        document.getElementById('toggleGeoJSON').addEventListener('click', function () {
+            if (geojsonLayer) {
+                if (map.hasLayer(geojsonLayer)) {
+                    map.removeLayer(geojsonLayer);
+                    this.classList.remove('active');
+                } else {
+                    geojsonLayer.addTo(map);
+                    this.classList.add('active');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
